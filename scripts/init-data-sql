@@ -40,3 +40,77 @@ CREATE TABLE staging.raw_superstore (
 );
 SELECT *
 FROM staging.raw_superstore;
+
+TRUNCATE TABLE staging.raw_superstore;
+;
+
+BULK INSERT staging.raw_superstore
+
+FROM 'C:\Users\ww\Documents\sql-data-warehouse-project\Central_Superstore.csv'
+
+WITH (
+    FIRSTROW = 2,
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '0x0a',
+    FORMAT = 'CSV',
+    FIELDQUOTE = '"',
+    CODEPAGE = '65001',
+    MAXERRORS = 0,
+    ERRORFILE = 'C:\Users\ww\Documents\sql-data-warehouse-project\raw_superstore_err_02.log'
+);
+
+select * from staging.raw_superstore;
+
+
+
+-- BRONZE LAYER
+
+CREATE TABLE bronze.superstore (
+    bronze_id       INT IDENTITY(1,1) PRIMARY KEY,
+    row_id          NVARCHAR(255),
+    order_id        NVARCHAR(255),
+    order_date      NVARCHAR(255),
+    ship_date       NVARCHAR(255),
+    ship_mode       NVARCHAR(255),
+    customer_id     NVARCHAR(255),
+    customer_name   NVARCHAR(255),
+    segment         NVARCHAR(255),
+    country         NVARCHAR(255),
+    city            NVARCHAR(255),
+    state           NVARCHAR(255),
+    postal_code     NVARCHAR(255),
+    region          NVARCHAR(255),
+    product_id      NVARCHAR(255),
+    category        NVARCHAR(255),
+    sub_category    NVARCHAR(255),
+    product_name    NVARCHAR(255),
+    sales           NVARCHAR(255),
+    quantity        NVARCHAR(255),
+    discount        NVARCHAR(255),
+    profit          NVARCHAR(255)
+);
+
+INSERT INTO bronze.superstore (
+    row_id, order_id, order_date, ship_date, ship_mode, customer_id,
+    customer_name, segment, country, city, state, postal_code, region,
+    product_id, category, sub_category, product_name, sales, quantity,
+    discount, profit
+)
+SELECT
+    row_id, order_id, order_date, ship_date, ship_mode, customer_id,
+    customer_name, segment, country, city, state, postal_code, region,
+    product_id, category, sub_category, product_name, sales, quantity,
+    discount, profit
+FROM staging.raw_superstore
+EXCEPT
+SELECT
+    row_id, order_id, order_date, ship_date, ship_mode, customer_id,
+    customer_name, segment, country, city, state, postal_code, region,
+    product_id, category, sub_category, product_name, sales, quantity,
+    discount, profit
+FROM bronze.superstore;
+
+select * from bronze.superstore;
+
+
+
