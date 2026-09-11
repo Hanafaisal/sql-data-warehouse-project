@@ -1,8 +1,4 @@
-1. Initialize Data Warehouse database and schemas
-
-USE master;
-GO
-
+-- Initialize Data Warehouse database and schemas
 CREATE DATABASE DataWarehouse;
 GO
 
@@ -17,3 +13,30 @@ GO
 
 CREATE SCHEMA gold;
 GO
+
+-- staging area 
+CREATE TABLE staging.raw_superstore (
+    row_id          NVARCHAR(255),
+    order_id        NVARCHAR(255),
+    order_date      NVARCHAR(255),
+    ship_date       NVARCHAR(255),
+    ship_mode       NVARCHAR(255),
+    customer_id     NVARCHAR(255),
+    customer_name   NVARCHAR(255),
+    segment         NVARCHAR(255),
+    country         NVARCHAR(255),
+    city            NVARCHAR(255),
+    state           NVARCHAR(255),
+    postal_code     NVARCHAR(255),
+    region          NVARCHAR(255),
+    product_id      NVARCHAR(255),
+    category        NVARCHAR(255),
+    sub_category    NVARCHAR(255),
+    product_name    NVARCHAR(255),
+    sales           NVARCHAR(255),
+    quantity        NVARCHAR(255),
+    discount        NVARCHAR(255),
+    profit          NVARCHAR(255)
+);
+SELECT *
+FROM staging.raw_superstore;
