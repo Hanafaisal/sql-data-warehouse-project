@@ -43,6 +43,7 @@ CREATE TABLE staging.raw_superstore (
 SELECT *
 FROM staging.raw_superstore;
 
+
 TRUNCATE TABLE staging.raw_superstore;
 ;
 
@@ -61,8 +62,12 @@ WITH (
     ERRORFILE = 'C:\Users\ww\Documents\sql-data-warehouse-project\raw_superstore_err_02.log'
 );
 
+
+
 select * from staging.raw_superstore;
 
+SELECT customer_name 
+FROM staging.raw_superstore;
 
 
 -- BRONZE LAYER
@@ -93,6 +98,19 @@ CREATE TABLE bronze.superstore (
     profit          NVARCHAR(255)
 );
 
+go
+CREATE or ALTER PROCEDURE bronze.load_bronze AS BEGIN
+
+DECLARE @start_time DATETIME , @end_time DATETIME;
+
+BEGIN TRY
+
+PRINT '-------------------------------------'
+PRINT 'Loading bronze layer'
+PRINT '-------------------------------------'
+
+SET @start_time = GETDATE();
+
 INSERT INTO bronze.superstore (
     row_id, order_id, order_date, ship_date, ship_mode, customer_id,
     customer_name, segment, country, city, state, postal_code, region,
@@ -114,6 +132,26 @@ SELECT
 FROM bronze.superstore;
 
 select * from bronze.superstore;
+END TRY
+BEGIN CATCH
+PRINT'error occured during loading layer'
+PRINT'error msg ' + ERROR_MESSAGE();
+PRINT'error msg ' + cast (ERROR_MESSAGE() as NVARCHAR);
+
+
+END CATCH
+
+END;
+SET @end_time = GETDATE();
+PRINT '>> load duration ' +CAST (DATEDIFF(SECOND,@start_time,@end_time) AS NVARCHAR) + 'second' ;
+GO
+
+
+USE DataWarehouse;
+GO
+SELECT top(100) *
+FROM [DataWarehouse].[bronze].[superstore]
+
 
 -- SILVER LAYER
 
@@ -123,7 +161,7 @@ BEGIN
         row_id NVARCHAR(20) NOT NULL,
         order_id NVARCHAR(20),
         order_date DATE,
-        ship_date DATE,
+        ship_date DATE, 
         ship_mode NVARCHAR(30),
         customer_id NVARCHAR(20),
         customer_name NVARCHAR(100),
@@ -148,6 +186,18 @@ BEGIN
     );
 END;
 GO
+
+select
+customer_id,
+COUNT(*)
+from bronze.superstore
+GROUP by customer_id
+having COUNT(*) > 1
+
+
+select*
+from bronze.superstore
+where customer_id = 'AA-10480'
 
 
 WITH ss_latest AS (
@@ -294,236 +344,3 @@ FROM silver.superstore;
 
 
 --gold LAYER
--- DIM_DATE
-IF OBJECT_ID('gold.dim_date', 'U') IS NULL
-BEGIN
-    CREATE TABLE gold.dim_date (
-        date_key      INT NOT NULL,
-        full_date     DATE NOT NULL,
-        day           SMALLINT NOT NULL,
-        month         SMALLINT NOT NULL,
-        month_name    NVARCHAR(20) NOT NULL,
-        quarter       SMALLINT NOT NULL,
-        year          SMALLINT NOT NULL,
-        day_of_week   SMALLINT NOT NULL,
-        day_name      NVARCHAR(20) NOT NULL,
-        is_weekend    BIT NOT NULL,
-        CONSTRAINT PK_gold_dim_date PRIMARY KEY (date_key)
-    );
-    INSERT INTO gold.dim_date VALUES (-1, '1900-01-01', 1, 1, 'Unknown', 1, 1900, 1, 'Unknown', 0);
-END;
-GO
- 
-MERGE gold.dim_date AS tgt
-USING (
-    SELECT DISTINCT d AS full_date
-    FROM (
-        SELECT order_date AS d FROM silver.superstore WHERE order_date IS NOT NULL
-        UNION
-        SELECT ship_date  AS d FROM silver.superstore WHERE ship_date IS NOT NULL
-    ) all_dates
-) AS src
-    ON tgt.full_date = src.full_date AND tgt.date_key <> -1
-WHEN NOT MATCHED THEN
-    INSERT (date_key, full_date, day, month, month_name, quarter, year, day_of_week, day_name, is_weekend)
-    VALUES (
-        CONVERT(INT, FORMAT(src.full_date, 'yyyyMMdd')), src.full_date,
-        DATEPART(DAY, src.full_date), DATEPART(MONTH, src.full_date), DATENAME(MONTH, src.full_date),
-        DATEPART(QUARTER, src.full_date), DATEPART(YEAR, src.full_date),
-        DATEPART(WEEKDAY, src.full_date), DATENAME(WEEKDAY, src.full_date),
-        CASE WHEN DATENAME(WEEKDAY, src.full_date) IN ('Saturday','Sunday') THEN 1 ELSE 0 END
-    );
-GO
- 
--- DIM_CUSTOMER
-IF OBJECT_ID('gold.dim_customer', 'U') IS NULL
-BEGIN
-    CREATE TABLE gold.dim_customer (
-        customer_key   INT IDENTITY(1,1) NOT NULL,
-        customer_id    NVARCHAR(20) NOT NULL,
-        customer_name  NVARCHAR(100) NOT NULL,
-        segment        NVARCHAR(30) NOT NULL,
-        CONSTRAINT PK_gold_dim_customer PRIMARY KEY (customer_key),
-        CONSTRAINT UQ_gold_dim_customer_bk UNIQUE (customer_id)
-    );
-    SET IDENTITY_INSERT gold.dim_customer ON;
-    INSERT INTO gold.dim_customer (customer_key, customer_id, customer_name, segment)
-    VALUES (-1, 'UNKNOWN', 'Unknown', 'Unknown');
-    SET IDENTITY_INSERT gold.dim_customer OFF;
-END;
-GO
- 
-MERGE gold.dim_customer AS tgt
-USING (
-    SELECT DISTINCT customer_id, customer_name, segment
-    FROM silver.superstore WHERE customer_id IS NOT NULL
-) AS src
-    ON tgt.customer_id = src.customer_id
-WHEN MATCHED THEN
-    UPDATE SET tgt.customer_name = src.customer_name, tgt.segment = src.segment
-WHEN NOT MATCHED THEN
-    INSERT (customer_id, customer_name, segment) VALUES (src.customer_id, src.customer_name, src.segment);
-GO
- 
--- DIM_PRODUCT
-IF OBJECT_ID('gold.dim_product', 'U') IS NULL
-BEGIN
-    CREATE TABLE gold.dim_product (
-        product_key    INT IDENTITY(1,1) NOT NULL,
-        product_id     NVARCHAR(30) NOT NULL,
-        product_name   NVARCHAR(200) NOT NULL,
-        category       NVARCHAR(50) NOT NULL,
-        sub_category   NVARCHAR(50) NOT NULL,
-        CONSTRAINT PK_gold_dim_product PRIMARY KEY (product_key),
-        CONSTRAINT UQ_gold_dim_product_bk UNIQUE (product_id, product_name)
-    );
-    SET IDENTITY_INSERT gold.dim_product ON;
-    INSERT INTO gold.dim_product (product_key, product_id, product_name, category, sub_category)
-    VALUES (-1, 'UNKNOWN', 'Unknown', 'Unknown', 'Unknown');
-    SET IDENTITY_INSERT gold.dim_product OFF;
-END;
-GO
- 
-MERGE gold.dim_product AS tgt
-USING (
-    SELECT DISTINCT product_id, product_name, category, sub_category
-    FROM silver.superstore WHERE product_id IS NOT NULL AND product_name IS NOT NULL
-) AS src
-    ON tgt.product_id = src.product_id AND tgt.product_name = src.product_name
-WHEN MATCHED THEN
-    UPDATE SET tgt.category = src.category, tgt.sub_category = src.sub_category
-WHEN NOT MATCHED THEN
-    INSERT (product_id, product_name, category, sub_category)
-    VALUES (src.product_id, src.product_name, src.category, src.sub_category);
-GO
- 
--- DIM_LOCATION
-IF OBJECT_ID('gold.dim_location', 'U') IS NULL
-BEGIN
-    CREATE TABLE gold.dim_location (
-        location_key   INT IDENTITY(1,1) NOT NULL,
-        city           NVARCHAR(100) NOT NULL,
-        state          NVARCHAR(100) NOT NULL,
-        postal_code    INT NOT NULL,
-        region         NVARCHAR(30) NOT NULL,
-        country        NVARCHAR(50) NOT NULL,
-        CONSTRAINT PK_gold_dim_location PRIMARY KEY (location_key),
-        CONSTRAINT UQ_gold_dim_location_bk UNIQUE (city, state, postal_code, region, country)
-    );
-    SET IDENTITY_INSERT gold.dim_location ON;
-    INSERT INTO gold.dim_location (location_key, city, state, postal_code, region, country)
-    VALUES (-1, 'Unknown', 'Unknown', -1, 'Unknown', 'Unknown');
-    SET IDENTITY_INSERT gold.dim_location OFF;
-END;
-GO
- 
-MERGE gold.dim_location AS tgt
-USING (
-    SELECT DISTINCT city, state, postal_code, region, country
-    FROM silver.superstore
-    WHERE city IS NOT NULL AND state IS NOT NULL AND postal_code IS NOT NULL
-) AS src
-    ON tgt.city = src.city AND tgt.state = src.state AND tgt.postal_code = src.postal_code
-       AND tgt.region = src.region AND tgt.country = src.country
-WHEN NOT MATCHED THEN
-    INSERT (city, state, postal_code, region, country)
-    VALUES (src.city, src.state, src.postal_code, src.region, src.country);
-GO
- 
--- DIM_SHIP_MODE
-IF OBJECT_ID('gold.dim_ship_mode', 'U') IS NULL
-BEGIN
-    CREATE TABLE gold.dim_ship_mode (
-        ship_mode_key  INT IDENTITY(1,1) NOT NULL,
-        ship_mode      NVARCHAR(30) NOT NULL,
-        CONSTRAINT PK_gold_dim_ship_mode PRIMARY KEY (ship_mode_key),
-        CONSTRAINT UQ_gold_dim_ship_mode_bk UNIQUE (ship_mode)
-    );
-    SET IDENTITY_INSERT gold.dim_ship_mode ON;
-    INSERT INTO gold.dim_ship_mode (ship_mode_key, ship_mode) VALUES (-1, 'Unknown');
-    SET IDENTITY_INSERT gold.dim_ship_mode OFF;
-END;
-GO
- 
-MERGE gold.dim_ship_mode AS tgt
-USING (SELECT DISTINCT ship_mode FROM silver.superstore WHERE ship_mode IS NOT NULL) AS src
-    ON tgt.ship_mode = src.ship_mode
-WHEN NOT MATCHED THEN
-    INSERT (ship_mode) VALUES (src.ship_mode);
-GO
- 
--- FACT_SALES
-IF OBJECT_ID('gold.fact_sales', 'U') IS NULL
-BEGIN
-    CREATE TABLE gold.fact_sales (
-        sales_key       NVARCHAR(20) NOT NULL,
-        order_id        NVARCHAR(20) NOT NULL,
-        order_date_key  INT NOT NULL,
-        ship_date_key   INT NOT NULL,
-        customer_key    INT NOT NULL,
-        product_key     INT NOT NULL,
-        location_key    INT NOT NULL,
-        ship_mode_key   INT NOT NULL,
-        sales_amount    DECIMAL(12,4) NOT NULL,
-        quantity        INT NOT NULL,
-        discount        DECIMAL(5,2) NOT NULL,
-        profit          DECIMAL(12,4) NOT NULL,
-        CONSTRAINT PK_gold_fact_sales PRIMARY KEY (sales_key),
-        CONSTRAINT FK_fact_sales_order_date FOREIGN KEY (order_date_key) REFERENCES gold.dim_date(date_key),
-        CONSTRAINT FK_fact_sales_ship_date  FOREIGN KEY (ship_date_key)  REFERENCES gold.dim_date(date_key),
-        CONSTRAINT FK_fact_sales_customer   FOREIGN KEY (customer_key)   REFERENCES gold.dim_customer(customer_key),
-        CONSTRAINT FK_fact_sales_product    FOREIGN KEY (product_key)    REFERENCES gold.dim_product(product_key),
-        CONSTRAINT FK_fact_sales_location   FOREIGN KEY (location_key)   REFERENCES gold.dim_location(location_key),
-        CONSTRAINT FK_fact_sales_ship_mode  FOREIGN KEY (ship_mode_key)  REFERENCES gold.dim_ship_mode(ship_mode_key)
-    );
-END;
-GO
- 
-MERGE gold.fact_sales AS tgt
-USING (
-    SELECT
-        s.row_id                                                    AS sales_key,
-        s.order_id                                                  AS order_id,
-        ISNULL(CONVERT(INT, FORMAT(s.order_date, 'yyyyMMdd')), -1)  AS order_date_key,
-        ISNULL(CONVERT(INT, FORMAT(s.ship_date, 'yyyyMMdd')), -1)   AS ship_date_key,
-        ISNULL(c.customer_key, -1)                                  AS customer_key,
-        ISNULL(p.product_key, -1)                                   AS product_key,
-        ISNULL(l.location_key, -1)                                  AS location_key,
-        ISNULL(sm.ship_mode_key, -1)                                AS ship_mode_key,
-        s.sales                                                     AS sales_amount,
-        s.quantity                                                  AS quantity,
-        s.discount                                                  AS discount,
-        s.profit                                                    AS profit
-    FROM silver.superstore s
-    LEFT JOIN gold.dim_customer c   ON s.customer_id = c.customer_id
-    LEFT JOIN gold.dim_product p    ON s.product_id = p.product_id AND s.product_name = p.product_name
-    LEFT JOIN gold.dim_location l   ON s.city = l.city AND s.state = l.state AND s.postal_code = l.postal_code
-    LEFT JOIN gold.dim_ship_mode sm ON s.ship_mode = sm.ship_mode
-    WHERE s.has_missing_value = 0 AND s.has_invalid_value = 0
-) AS src
-    ON tgt.sales_key = src.sales_key
-WHEN MATCHED THEN
-    UPDATE SET
-        tgt.order_id = src.order_id, tgt.order_date_key = src.order_date_key,
-        tgt.ship_date_key = src.ship_date_key, tgt.customer_key = src.customer_key,
-        tgt.product_key = src.product_key, tgt.location_key = src.location_key,
-        tgt.ship_mode_key = src.ship_mode_key, tgt.sales_amount = src.sales_amount,
-        tgt.quantity = src.quantity, tgt.discount = src.discount, tgt.profit = src.profit
-WHEN NOT MATCHED THEN
-    INSERT (sales_key, order_id, order_date_key, ship_date_key, customer_key, product_key,
-            location_key, ship_mode_key, sales_amount, quantity, discount, profit)
-    VALUES (src.sales_key, src.order_id, src.order_date_key, src.ship_date_key, src.customer_key,
-            src.product_key, src.location_key, src.ship_mode_key, src.sales_amount, src.quantity,
-            src.discount, src.profit);
-GO
- 
- 
--- ================================================================
--- SANITY CHECK
--- ================================================================
-SELECT 'staging' AS layer, COUNT(*) AS row_count FROM staging.raw_superstore
-UNION ALL SELECT 'bronze', COUNT(*) FROM bronze.superstore
-UNION ALL SELECT 'silver', COUNT(*) FROM silver.superstore
-UNION ALL SELECT 'gold_fact', COUNT(*) FROM gold.fact_sales;
-
-
