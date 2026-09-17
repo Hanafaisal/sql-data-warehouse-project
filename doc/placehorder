@@ -1,1 +1,1552 @@
+Directory structure:
+└── hanafaisal-sql-data-warehouse-project/
+    ├── README.md
+    ├── LICENSE
+    ├── datasets/
+    │   └── placehorder
+    ├── doc/
+    │   └── placehorder
+    ├── scripts/
+    │   ├── analysis_queries.sql
+    │   ├── INIT-data-sql
+    │   ├── init-data-sql
+    │   └── placehorder
+    └── tests/
+        └── placeholder
+
+
+Files Content:
+
+================================================
+FILE: README.md
+================================================
+# Data Warehouse and Aanlytics Project
+# Advanced SQL Data Warehouse & Business Analytics
+
+## Definition
+
+An advanced SQL project focused on transforming retail operational data into a structured analytical database using **Data Warehouse concepts, relational modeling, and advanced SQL techniques**.
+
+The project aims to build a **Star Schema** consisting of fact and dimension tables, then use advanced SQL queries, views, and stored procedures to analyze sales performance, profitability, customer behavior, and business trends.
+
+---
+
+## Business Scenario
+
+A retail organization wants to transform its operational data into an analytical relational database for **executive reporting and KPI monitoring**.
+
+The database should support business analysis and help decision-makers understand sales performance, profitability, customer behavior, and sales trends.
+
+---
+
+## Required Tasks
+
+### 1. Database Design
+
+* Analyze the provided retail dataset.
+* Identify the main business entities and relationships.
+* Normalize the dataset into fact and dimension tables.
+* Build a **Star Schema**.
+* Define appropriate data types for all columns.
+
+### 2. Database Relationships
+
+* Create **Primary Keys (PK)**.
+* Create **Foreign Keys (FK)**.
+* Establish relationships between fact and dimension tables.
+* Maintain referential integrity.
+
+### 3. Advanced SQL Queries
+
+Write analytical SQL queries using:
+
+* `JOIN`
+* Subqueries
+* `CTE`
+* `CASE`
+* Aggregate Functions
+* `GROUP BY`
+* `HAVING`
+* Window Functions
+
+The queries should answer meaningful business questions.
+
+### 4. KPI Analysis
+
+Calculate and analyze business KPIs such as:
+
+* Total Sales
+* Total Profit
+* Profit Margin
+* Average Order Value
+* Number of Orders
+* Number of Customers
+* Sales Growth
+* Customer Contribution
+* Top Performing Products
+* Regional Performance
+
+### 5. SQL Views
+
+* Create at least **one SQL View**.
+* The view should provide reusable analytical data for reporting or KPI analysis.
+
+### 6. Stored Procedures
+
+* Create at least **one Stored Procedure**.
+* The procedure should perform a reusable analytical or KPI calculation.
+* Use parameters where appropriate.
+
+### 7. Business Analytics
+
+Create analytical reports covering:
+
+#### Profitability Analysis
+
+* Revenue and Profit
+* Profit Margin
+* Most and least profitable products
+* Regional profitability
+
+#### Customer Behavior
+
+* Customer spending
+* Purchase frequency
+* Top customers
+* Customer segmentation
+
+#### Sales Trends
+
+* Monthly and yearly sales
+* Sales growth
+* Product performance over time
+* Regional sales trends
+
+### 8. Query Optimization
+
+Optimize SQL queries by:
+
+* Avoiding unnecessary columns.
+* Using appropriate filtering.
+* Creating suitable indexes.
+* Reviewing execution plans where applicable.
+* Reducing unnecessary calculations.
+* Comparing query performance before and after optimization.
+
+---
+
+## Technical Requirements
+
+* Minimum **5 relational tables**.
+* At least **15 SQL queries**.
+* Minimum **3 JOIN operations**.
+* At least **2 CTEs**.
+* At least **1 stored procedure**.
+* At least **1 SQL view**.
+* At least **1 Star Schema**.
+* At least **1 Fact Table**.
+* At least **3 Dimension Tables**.
+* Use **Primary Keys and Foreign Keys**.
+* Include **Subqueries and CASE statements**.
+* Include analytical KPIs and business insights.
+
+---
+
+## Expected Deliverables
+
+### Database
+
+* Fact tables
+* Dimension tables
+* Primary Keys
+* Foreign Keys
+* Star Schema
+
+### SQL Script
+
+* Database and table creation
+* Relationships
+* Data preparation
+* Analytical queries
+* CTEs
+* Subqueries
+* CASE statements
+* SQL View
+* Stored Procedure
+* Query optimization
+
+### Business Analytics
+
+* Profitability Analysis
+* Customer Behavior Analysis
+* Sales Trend Analysis
+* KPI Calculations
+* Key Business Insights
+
+### Documentation
+
+* Database schema explanation
+* Business questions
+* KPI definitions
+* SQL techniques used
+* Query optimization approach
+* Final business insights
+
+---
+
+## Completion Criteria
+
+The project is considered complete when all technical requirements are fulfilled and the database successfully provides analytical insights for **sales, profitability, customer behavior, and business performance**.
+
+
+
+================================================
+FILE: LICENSE
+================================================
+MIT License
+
+Copyright (c) 2026 hana faisal
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+
+================================================
+FILE: datasets/placehorder
+================================================
+
+
+
+
+================================================
+FILE: doc/placehorder
+================================================
+
+
+
+
+================================================
+FILE: scripts/analysis_queries.sql
+================================================
+/* ================================================================
+   GOLD LAYER - DOCUMENTED ANALYTICAL QUERIES
+   Project: Superstore Data Warehouse
+
+   Purpose:
+   This script contains analytical queries for executive reporting,
+   KPI monitoring, profitability analysis, customer behavior,
+   product performance, geographic analysis, and sales trends.
+
+   Data Source:
+   gold.fact_sales + gold dimension tables
+
+   Star Schema:
+   fact_sales
+       |
+       +-- dim_date
+       +-- dim_customer
+       +-- dim_product
+       +-- dim_location
+       +-- dim_ship_mode
+================================================================ */
+
+
+CREATE OR ALTER VIEW gold.vw_sales_performance
+AS
+SELECT
+    f.sales_key,
+    f.order_id,
+    d.full_date AS order_date,
+    c.customer_id,
+    c.customer_name,
+    c.segment,
+    p.product_id,
+    p.product_name,
+    p.category,
+    p.sub_category,
+    l.city,
+    l.state,
+    l.region,
+    sm.ship_mode,
+    f.sales_amount,
+    f.quantity,
+    f.discount,
+    f.profit
+FROM gold.fact_sales f
+JOIN gold.dim_date d
+    ON f.order_date_key = d.date_key
+JOIN gold.dim_customer c
+    ON f.customer_key = c.customer_key
+JOIN gold.dim_product p
+    ON f.product_key = p.product_key
+JOIN gold.dim_location l
+    ON f.location_key = l.location_key
+JOIN gold.dim_ship_mode sm
+    ON f.ship_mode_key = sm.ship_mode_key;
+GO
+
+
+CREATE OR ALTER PROCEDURE gold.usp_sales_kpis
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        COUNT(*) AS total_orders,
+        SUM(quantity) AS total_quantity,
+        SUM(sales_amount) AS total_sales,
+        SUM(profit) AS total_profit,
+        AVG(sales_amount) AS avg_order_value,
+        AVG(discount) AS avg_discount,
+        CASE
+            WHEN SUM(sales_amount) = 0 THEN 0
+            ELSE (SUM(profit) / SUM(sales_amount)) * 100
+        END AS profit_margin_percentage
+    FROM gold.fact_sales;
+END;
+GO
+
+
+EXEC gold.usp_sales_kpis;
+
+
+
+/* ================================================================
+   QUERY 01 - OVERALL SALES KPIs
+   ---------------------------------------------------------------
+   Business Question:
+   What are the overall sales, profit, quantity, and order KPIs?
+
+   Purpose:
+   Provides a high-level executive summary of business performance.
+================================================================ */
+
+SELECT
+    COUNT(*) AS total_sales_transactions,
+    COUNT(DISTINCT order_id) AS total_orders,
+    SUM(quantity) AS total_quantity,
+    SUM(sales_amount) AS total_sales,
+    SUM(profit) AS total_profit,
+    AVG(sales_amount) AS average_transaction_value,
+    AVG(discount) AS average_discount,
+    CASE
+        WHEN SUM(sales_amount) = 0 THEN 0
+        ELSE (SUM(profit) / SUM(sales_amount)) * 100
+    END AS profit_margin_percentage
+FROM gold.fact_sales;
+
+
+/* ================================================================
+   QUERY 02 - SALES BY CATEGORY
+   ---------------------------------------------------------------
+   Business Question:
+   Which product categories generate the most sales?
+
+   Purpose:
+   Compares revenue contribution across product categories.
+================================================================ */
+
+SELECT
+    p.category,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.quantity) AS total_quantity,
+    SUM(f.profit) AS total_profit
+FROM gold.fact_sales f
+INNER JOIN gold.dim_product p
+    ON f.product_key = p.product_key
+GROUP BY p.category
+ORDER BY total_sales DESC;
+
+
+/* ================================================================
+   QUERY 03 - PROFITABILITY BY CATEGORY
+   ---------------------------------------------------------------
+   Business Question:
+   Which categories are the most profitable?
+
+   Purpose:
+   Measures profit and profit margin by category.
+================================================================ */
+
+SELECT
+    p.category,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.profit) AS total_profit,
+    CASE
+        WHEN SUM(f.sales_amount) = 0 THEN 0
+        ELSE (SUM(f.profit) / SUM(f.sales_amount)) * 100
+    END AS profit_margin_percentage
+FROM gold.fact_sales f
+INNER JOIN gold.dim_product p
+    ON f.product_key = p.product_key
+GROUP BY p.category
+ORDER BY total_profit DESC;
+
+
+/* ================================================================
+   QUERY 04 - TOP 10 PRODUCTS BY SALES
+   ---------------------------------------------------------------
+   Business Question:
+   Which products generate the highest sales?
+
+   Purpose:
+   Identifies the strongest products by revenue contribution.
+================================================================ */
+
+SELECT TOP 10
+    p.product_id,
+    p.product_name,
+    p.category,
+    p.sub_category,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.profit) AS total_profit
+FROM gold.fact_sales f
+INNER JOIN gold.dim_product p
+    ON f.product_key = p.product_key
+GROUP BY
+    p.product_id,
+    p.product_name,
+    p.category,
+    p.sub_category
+ORDER BY total_sales DESC;
+
+
+/* ================================================================
+   QUERY 05 - TOP 10 PRODUCTS BY PROFIT
+   ---------------------------------------------------------------
+   Business Question:
+   Which products generate the highest profit?
+
+   Purpose:
+   Identifies products that contribute most to profitability,
+   rather than only looking at revenue.
+================================================================ */
+
+SELECT TOP 10
+    p.product_id,
+    p.product_name,
+    p.category,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.profit) AS total_profit,
+    CASE
+        WHEN SUM(f.sales_amount) = 0 THEN 0
+        ELSE (SUM(f.profit) / SUM(f.sales_amount)) * 100
+    END AS profit_margin_percentage
+FROM gold.fact_sales f
+INNER JOIN gold.dim_product p
+    ON f.product_key = p.product_key
+GROUP BY
+    p.product_id,
+    p.product_name,
+    p.category
+ORDER BY total_profit DESC;
+
+
+/* ================================================================
+   QUERY 06 - SALES TREND BY YEAR
+   ---------------------------------------------------------------
+   Business Question:
+   How does sales performance change from year to year?
+
+   Purpose:
+   Analyzes long-term sales and profitability trends.
+================================================================ */
+
+SELECT
+    d.year,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.profit) AS total_profit,
+    SUM(f.quantity) AS total_quantity
+FROM gold.fact_sales f
+INNER JOIN gold.dim_date d
+    ON f.order_date_key = d.date_key
+GROUP BY d.year
+ORDER BY d.year;
+
+
+/* ================================================================
+   QUERY 07 - MONTHLY SALES TREND
+   ---------------------------------------------------------------
+   Business Question:
+   How do sales and profit change month by month?
+
+   Purpose:
+   Detects seasonal patterns and monthly performance changes.
+================================================================ */
+
+SELECT
+    d.year,
+    d.month,
+    d.month_name,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.profit) AS total_profit,
+    SUM(f.quantity) AS total_quantity
+FROM gold.fact_sales f
+INNER JOIN gold.dim_date d
+    ON f.order_date_key = d.date_key
+GROUP BY
+    d.year,
+    d.month,
+    d.month_name
+ORDER BY
+    d.year,
+    d.month;
+
+
+/* ================================================================
+   QUERY 08 - SALES BY REGION
+   ---------------------------------------------------------------
+   Business Question:
+   Which regions generate the highest sales and profit?
+
+   Purpose:
+   Supports geographic performance analysis.
+================================================================ */
+
+SELECT
+    l.region,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.profit) AS total_profit,
+    SUM(f.quantity) AS total_quantity
+FROM gold.fact_sales f
+INNER JOIN gold.dim_location l
+    ON f.location_key = l.location_key
+GROUP BY l.region
+ORDER BY total_sales DESC;
+
+
+/* ================================================================
+   QUERY 09 - SALES BY STATE
+   ---------------------------------------------------------------
+   Business Question:
+   Which states contribute the most to sales?
+
+   Purpose:
+   Provides a more detailed geographic analysis than region level.
+================================================================ */
+
+SELECT TOP 15
+    l.state,
+    l.region,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.profit) AS total_profit
+FROM gold.fact_sales f
+INNER JOIN gold.dim_location l
+    ON f.location_key = l.location_key
+GROUP BY
+    l.state,
+    l.region
+ORDER BY total_sales DESC;
+
+
+/* ================================================================
+   QUERY 10 - CUSTOMER PROFITABILITY
+   ---------------------------------------------------------------
+   Business Question:
+   Which customers generate the highest sales and profit?
+
+   Purpose:
+   Supports customer value and profitability analysis.
+================================================================ */
+
+SELECT TOP 20
+    c.customer_id,
+    c.customer_name,
+    c.segment,
+    COUNT(DISTINCT f.order_id) AS total_orders,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.profit) AS total_profit
+FROM gold.fact_sales f
+INNER JOIN gold.dim_customer c
+    ON f.customer_key = c.customer_key
+GROUP BY
+    c.customer_id,
+    c.customer_name,
+    c.segment
+ORDER BY total_profit DESC;
+
+
+/* ================================================================
+   QUERY 11 - CUSTOMER SEGMENT PERFORMANCE
+   ---------------------------------------------------------------
+   Business Question:
+   How does each customer segment perform?
+
+   Purpose:
+   Compares Consumer, Corporate, and other customer segments
+   using sales, profit, and order volume.
+================================================================ */
+
+SELECT
+    c.segment,
+    COUNT(DISTINCT c.customer_id) AS number_of_customers,
+    COUNT(DISTINCT f.order_id) AS total_orders,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.profit) AS total_profit,
+    CASE
+        WHEN SUM(f.sales_amount) = 0 THEN 0
+        ELSE (SUM(f.profit) / SUM(f.sales_amount)) * 100
+    END AS profit_margin_percentage
+FROM gold.fact_sales f
+INNER JOIN gold.dim_customer c
+    ON f.customer_key = c.customer_key
+GROUP BY c.segment
+ORDER BY total_sales DESC;
+
+
+/* ================================================================
+   QUERY 12 - SHIP MODE PERFORMANCE
+   ---------------------------------------------------------------
+   Business Question:
+   Which shipping modes generate the most sales and profit?
+
+   Purpose:
+   Evaluates sales performance across different shipping methods.
+================================================================ */
+
+SELECT
+    sm.ship_mode,
+    COUNT(DISTINCT f.order_id) AS total_orders,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.profit) AS total_profit,
+    AVG(f.discount) AS average_discount
+FROM gold.fact_sales f
+INNER JOIN gold.dim_ship_mode sm
+    ON f.ship_mode_key = sm.ship_mode_key
+GROUP BY sm.ship_mode
+ORDER BY total_sales DESC;
+
+
+/* ================================================================
+   QUERY 13 - HIGH-VALUE CUSTOMERS USING CTE
+   ---------------------------------------------------------------
+   Business Question:
+   Which customers generate sales above the average customer sales?
+
+   Purpose:
+   Uses a CTE and subquery to identify high-value customers.
+================================================================ */
+
+WITH customer_sales AS
+(
+    SELECT
+        c.customer_id,
+        c.customer_name,
+        SUM(f.sales_amount) AS total_sales
+    FROM gold.fact_sales f
+    INNER JOIN gold.dim_customer c
+        ON f.customer_key = c.customer_key
+    GROUP BY
+        c.customer_id,
+        c.customer_name
+)
+SELECT
+    customer_id,
+    customer_name,
+    total_sales
+FROM customer_sales
+WHERE total_sales >
+(
+    SELECT AVG(total_sales)
+    FROM customer_sales
+)
+ORDER BY total_sales DESC;
+
+
+/* ================================================================
+   QUERY 14 - CUSTOMER PROFITABILITY CLASSIFICATION
+   ---------------------------------------------------------------
+   Business Question:
+   How can customers be classified based on their profitability?
+
+   Purpose:
+   Uses a CTE and CASE statement to classify customers.
+================================================================ */
+
+WITH customer_profit AS
+(
+    SELECT
+        c.customer_id,
+        c.customer_name,
+        SUM(f.sales_amount) AS total_sales,
+        SUM(f.profit) AS total_profit
+    FROM gold.fact_sales f
+    INNER JOIN gold.dim_customer c
+        ON f.customer_key = c.customer_key
+    GROUP BY
+        c.customer_id,
+        c.customer_name
+)
+SELECT
+    customer_id,
+    customer_name,
+    total_sales,
+    total_profit,
+    CASE
+        WHEN total_profit >= 500 THEN 'High Profit'
+        WHEN total_profit >= 100 THEN 'Medium Profit'
+        ELSE 'Low Profit'
+    END AS profitability_segment
+FROM customer_profit
+ORDER BY total_profit DESC;
+
+
+/* ================================================================
+   QUERY 15 - PRODUCTS ABOVE AVERAGE SALES
+   ---------------------------------------------------------------
+   Business Question:
+   Which products generate sales above the average product sales?
+
+   Purpose:
+   Uses a subquery to identify products performing above
+   the overall product average.
+================================================================ */
+
+SELECT
+    p.product_id,
+    p.product_name,
+    p.category,
+    SUM(f.sales_amount) AS total_sales
+FROM gold.fact_sales f
+INNER JOIN gold.dim_product p
+    ON f.product_key = p.product_key
+GROUP BY
+    p.product_id,
+    p.product_name,
+    p.category
+HAVING SUM(f.sales_amount) >
+(
+    SELECT AVG(product_sales)
+    FROM
+    (
+        SELECT
+            SUM(sales_amount) AS product_sales
+        FROM gold.fact_sales
+        GROUP BY product_key
+    ) AS product_summary
+)
+ORDER BY total_sales DESC;
+
+
+/* ================================================================
+   QUERY 16 - LOSS-MAKING PRODUCTS
+   ---------------------------------------------------------------
+   Business Question:
+   Which products generate negative profit?
+
+   Purpose:
+   Identifies products that generate revenue but negatively
+   affect overall profitability.
+================================================================ */
+
+SELECT
+    p.product_id,
+    p.product_name,
+    p.category,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.profit) AS total_profit
+FROM gold.fact_sales f
+INNER JOIN gold.dim_product p
+    ON f.product_key = p.product_key
+GROUP BY
+    p.product_id,
+    p.product_name,
+    p.category
+HAVING SUM(f.profit) < 0
+ORDER BY total_profit ASC;
+
+
+/* ================================================================
+   QUERY 17 - DISCOUNT VS PROFITABILITY
+   ---------------------------------------------------------------
+   Business Question:
+   How does discount level relate to sales and profit?
+
+   Purpose:
+   Groups transactions into discount ranges to analyze
+   their relationship with profitability.
+================================================================ */
+
+SELECT
+    CASE
+        WHEN discount = 0 THEN 'No Discount'
+        WHEN discount <= 0.20 THEN 'Low Discount'
+        WHEN discount <= 0.40 THEN 'Medium Discount'
+        ELSE 'High Discount'
+    END AS discount_category,
+
+    COUNT(*) AS total_transactions,
+    SUM(sales_amount) AS total_sales,
+    SUM(profit) AS total_profit,
+
+    CASE
+        WHEN SUM(sales_amount) = 0 THEN 0
+        ELSE (SUM(profit) / SUM(sales_amount)) * 100
+    END AS profit_margin_percentage
+
+FROM gold.fact_sales
+GROUP BY
+    CASE
+        WHEN discount = 0 THEN 'No Discount'
+        WHEN discount <= 0.20 THEN 'Low Discount'
+        WHEN discount <= 0.40 THEN 'Medium Discount'
+        ELSE 'High Discount'
+    END
+ORDER BY total_sales DESC;
+
+
+/* ================================================================
+   QUERY 18 - SUB-CATEGORY PERFORMANCE
+   ---------------------------------------------------------------
+   Business Question:
+   Which sub-categories have the strongest sales and profitability?
+
+   Purpose:
+   Provides a deeper product hierarchy analysis.
+================================================================ */
+
+SELECT
+    p.category,
+    p.sub_category,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.profit) AS total_profit,
+    SUM(f.quantity) AS total_quantity
+FROM gold.fact_sales f
+INNER JOIN gold.dim_product p
+    ON f.product_key = p.product_key
+GROUP BY
+    p.category,
+    p.sub_category
+ORDER BY
+    p.category,
+    total_sales DESC;
+
+
+/* ================================================================
+   QUERY 19 - CITY LEVEL PERFORMANCE
+   ---------------------------------------------------------------
+   Business Question:
+   Which cities generate the highest sales?
+
+   Purpose:
+   Identifies high-performing geographic markets.
+================================================================ */
+
+SELECT TOP 20
+    l.city,
+    l.state,
+    l.region,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.profit) AS total_profit
+FROM gold.fact_sales f
+INNER JOIN gold.dim_location l
+    ON f.location_key = l.location_key
+GROUP BY
+    l.city,
+    l.state,
+    l.region
+ORDER BY total_sales DESC;
+
+
+/* ================================================================
+   QUERY 20 - YEARLY PROFIT MARGIN
+   ---------------------------------------------------------------
+   Business Question:
+   How does profitability change over time?
+
+   Purpose:
+   Tracks annual sales, profit, and profit margin.
+================================================================ */
+
+SELECT
+    d.year,
+    SUM(f.sales_amount) AS total_sales,
+    SUM(f.profit) AS total_profit,
+    CASE
+        WHEN SUM(f.sales_amount) = 0 THEN 0
+        ELSE (SUM(f.profit) / SUM(f.sales_amount)) * 100
+    END AS profit_margin_percentage
+FROM gold.fact_sales f
+INNER JOIN gold.dim_date d
+    ON f.order_date_key = d.date_key
+GROUP BY d.year
+ORDER BY d.year;
+
+
+================================================
+FILE: scripts/INIT-data-sql
+================================================
+-- BRONZE LAYER
+if OBJECT_ID ('bronze.superstore','U') IS NOT NULL
+DROP TABLE bronze.superstore ;
+CREATE TABLE bronze.superstore (
+    bronze_id       INT IDENTITY(1,1) PRIMARY KEY,
+    row_id          NVARCHAR(255),
+    order_id        NVARCHAR(255),
+    order_date      NVARCHAR(255),
+    ship_date       NVARCHAR(255),
+    ship_mode       NVARCHAR(255),
+    customer_id     NVARCHAR(255),
+    customer_name   NVARCHAR(255),
+    segment         NVARCHAR(255),
+    country         NVARCHAR(255),
+    city            NVARCHAR(255),
+    state           NVARCHAR(255),
+    postal_code     NVARCHAR(255),
+    region          NVARCHAR(255),
+    product_id      NVARCHAR(255),
+    category        NVARCHAR(255),
+    sub_category    NVARCHAR(255),
+    product_name    NVARCHAR(255),
+    sales           NVARCHAR(255),
+    quantity        NVARCHAR(255),
+    discount        NVARCHAR(255),
+    profit          NVARCHAR(255)
+);
+
+CREATE or ALTER PROCEDURE bronze.load_bronze AS BEGIN
+
+
+INSERT INTO bronze.superstore (
+    row_id, order_id, order_date, ship_date, ship_mode, customer_id,
+    customer_name, segment, country, city, state, postal_code, region,
+    product_id, category, sub_category, product_name, sales, quantity,
+    discount, profit
+)
+SELECT
+    row_id, order_id, order_date, ship_date, ship_mode, customer_id,
+    customer_name, segment, country, city, state, postal_code, region,
+    product_id, category, sub_category, product_name, sales, quantity,
+    discount, profit
+FROM staging.raw_superstore
+EXCEPT
+SELECT
+    row_id, order_id, order_date, ship_date, ship_mode, customer_id,
+    customer_name, segment, country, city, state, postal_code, region,
+    product_id, category, sub_category, product_name, sales, quantity,
+    discount, profit
+FROM bronze.superstore;
+
+select * from bronze.superstore;
+
+END
+
+
+
+================================================
+FILE: scripts/init-data-sql
+================================================
+-- Initialize Data Warehouse database and schemas
+CREATE DATABASE DataWarehouse;
+GO
+
+USE DataWarehouse;
+GO
+
+CREATE SCHEMA bronze;
+GO
+
+CREATE SCHEMA silver;
+GO
+
+CREATE SCHEMA gold;
+GO
+
+-- staging area 
+if OBJECT_ID ('staging.raw_superstore','U') IS NOT NULL
+DROP TABLE staging.raw_superstore ;
+CREATE TABLE staging.raw_superstore (
+    row_id          NVARCHAR(255),
+    order_id        NVARCHAR(255),
+    order_date      NVARCHAR(255),
+    ship_date       NVARCHAR(255),
+    ship_mode       NVARCHAR(255),
+    customer_id     NVARCHAR(255),
+    customer_name   NVARCHAR(255),
+    segment         NVARCHAR(255),
+    country         NVARCHAR(255),
+    city            NVARCHAR(255),
+    state           NVARCHAR(255),
+    postal_code     NVARCHAR(255),
+    region          NVARCHAR(255),
+    product_id      NVARCHAR(255),
+    category        NVARCHAR(255),
+    sub_category    NVARCHAR(255),
+    product_name    NVARCHAR(255),
+    sales           NVARCHAR(255),
+    quantity        NVARCHAR(255),
+    discount        NVARCHAR(255),
+    profit          NVARCHAR(255)
+);
+SELECT *
+FROM staging.raw_superstore;
+
+
+TRUNCATE TABLE staging.raw_superstore;
+;
+
+BULK INSERT staging.raw_superstore
+
+FROM 'C:\Users\ww\Documents\sql-data-warehouse-project\Central_Superstore.csv'
+
+WITH (
+    FIRSTROW = 2,
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '0x0a',
+    FORMAT = 'CSV',
+    FIELDQUOTE = '"',
+    CODEPAGE = '65001',
+    MAXERRORS = 0,
+    ERRORFILE = 'C:\Users\ww\Documents\sql-data-warehouse-project\raw_superstore_err_02.log'
+);
+
+
+
+select * from staging.raw_superstore;
+
+SELECT customer_name 
+FROM staging.raw_superstore;
+
+
+-- BRONZE LAYER
+if OBJECT_ID ('bronze.superstore','U') IS NOT NULL
+DROP TABLE bronze.superstore ;
+CREATE TABLE bronze.superstore (
+    bronze_id       INT IDENTITY(1,1) PRIMARY KEY,
+    row_id          NVARCHAR(255),
+    order_id        NVARCHAR(255),
+    order_date      NVARCHAR(255),
+    ship_date       NVARCHAR(255),
+    ship_mode       NVARCHAR(255),
+    customer_id     NVARCHAR(255),
+    customer_name   NVARCHAR(255),
+    segment         NVARCHAR(255),
+    country         NVARCHAR(255),
+    city            NVARCHAR(255),
+    state           NVARCHAR(255),
+    postal_code     NVARCHAR(255),
+    region          NVARCHAR(255),
+    product_id      NVARCHAR(255),
+    category        NVARCHAR(255),
+    sub_category    NVARCHAR(255),
+    product_name    NVARCHAR(255),
+    sales           NVARCHAR(255),
+    quantity        NVARCHAR(255),
+    discount        NVARCHAR(255),
+    profit          NVARCHAR(255)
+);
+
+go
+CREATE or ALTER PROCEDURE bronze.load_bronze AS BEGIN
+
+DECLARE @start_time DATETIME , @end_time DATETIME;
+
+BEGIN TRY
+
+PRINT '-------------------------------------'
+PRINT 'Loading bronze layer'
+PRINT '-------------------------------------'
+
+SET @start_time = GETDATE();
+
+INSERT INTO bronze.superstore (
+    row_id, order_id, order_date, ship_date, ship_mode, customer_id,
+    customer_name, segment, country, city, state, postal_code, region,
+    product_id, category, sub_category, product_name, sales, quantity,
+    discount, profit
+)
+SELECT
+    row_id, order_id, order_date, ship_date, ship_mode, customer_id,
+    customer_name, segment, country, city, state, postal_code, region,
+    product_id, category, sub_category, product_name, sales, quantity,
+    discount, profit
+FROM staging.raw_superstore
+EXCEPT
+SELECT
+    row_id, order_id, order_date, ship_date, ship_mode, customer_id,
+    customer_name, segment, country, city, state, postal_code, region,
+    product_id, category, sub_category, product_name, sales, quantity,
+    discount, profit
+FROM bronze.superstore;
+
+select * from bronze.superstore;
+END TRY
+BEGIN CATCH
+PRINT'error occured during loading layer'
+PRINT'error msg ' + ERROR_MESSAGE();
+PRINT'error msg ' + cast (ERROR_MESSAGE() as NVARCHAR);
+
+
+END CATCH
+
+END;
+SET @end_time = GETDATE();
+PRINT '>> load duration ' +CAST (DATEDIFF(SECOND,@start_time,@end_time) AS NVARCHAR) + 'second' ;
+GO
+
+
+USE DataWarehouse;
+GO
+SELECT top(100) *
+FROM [DataWarehouse].[bronze].[superstore]
+
+
+-- SILVER LAYER
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = 'silver' AND t.name = 'superstore')
+BEGIN
+    CREATE TABLE silver.superstore (
+        row_id NVARCHAR(20) NOT NULL,
+        order_id NVARCHAR(20),
+        order_date DATE,
+        ship_date DATE, 
+        ship_mode NVARCHAR(30),
+        customer_id NVARCHAR(20),
+        customer_name NVARCHAR(100),
+        segment NVARCHAR(30),
+        country NVARCHAR(50),
+        city NVARCHAR(100),
+        state NVARCHAR(100),
+        postal_code INT,
+        region NVARCHAR(30),
+        product_id NVARCHAR(30),
+        category NVARCHAR(50),
+        sub_category NVARCHAR(50),
+        product_name NVARCHAR(200),
+        sales DECIMAL(12,4),
+        quantity INT,
+        discount DECIMAL(5,2),
+        profit DECIMAL(12,4),
+        has_missing_value BIT NOT NULL DEFAULT 0,
+        has_invalid_value BIT NOT NULL DEFAULT 0,
+        has_outlier_value BIT NOT NULL DEFAULT 0,
+        CONSTRAINT PK_silver_superstore PRIMARY KEY (row_id)
+    );
+END;
+GO
+
+select
+customer_id,
+COUNT(*)
+from bronze.superstore
+GROUP by customer_id
+having COUNT(*) > 1
+
+
+select*
+from bronze.superstore
+where customer_id = 'AA-10480'
+
+
+WITH ss_latest AS (
+    SELECT *,
+        ROW_NUMBER() OVER (PARTITION BY row_id ORDER BY bronze_id DESC) AS rn
+    FROM bronze.superstore
+    WHERE NULLIF(LTRIM(RTRIM(row_id)), '') IS NOT NULL
+),
+
+ss_cleaned AS (
+    SELECT
+        LTRIM(RTRIM(row_id)) AS row_id,
+        NULLIF(LTRIM(RTRIM(order_id)), '') AS order_id,
+
+        TRY_CAST(NULLIF(LTRIM(RTRIM(order_date)), '') AS DATE) AS order_date,
+        NULLIF(LTRIM(RTRIM(order_date)), '') AS raw_order_date,
+
+        TRY_CAST(NULLIF(LTRIM(RTRIM(ship_date)), '') AS DATE) AS ship_date,
+        NULLIF(LTRIM(RTRIM(ship_date)), '') AS raw_ship_date,
+
+        NULLIF(LTRIM(RTRIM(ship_mode)), '') AS ship_mode,
+        NULLIF(LTRIM(RTRIM(customer_id)), '') AS customer_id,
+        NULLIF(LTRIM(RTRIM(customer_name)), '') AS customer_name,
+        NULLIF(LTRIM(RTRIM(segment)), '') AS segment,
+        NULLIF(LTRIM(RTRIM(country)), '') AS country,
+        NULLIF(LTRIM(RTRIM(city)), '') AS city,
+        NULLIF(LTRIM(RTRIM(state)), '') AS state,
+
+        TRY_CAST(NULLIF(LTRIM(RTRIM(postal_code)), '') AS INT) AS postal_code,
+        NULLIF(LTRIM(RTRIM(postal_code)), '') AS raw_postal_code,
+
+        NULLIF(LTRIM(RTRIM(region)), '') AS region,
+        NULLIF(LTRIM(RTRIM(product_id)), '') AS product_id,
+        NULLIF(LTRIM(RTRIM(category)), '') AS category,
+        NULLIF(LTRIM(RTRIM(sub_category)), '') AS sub_category,
+        NULLIF(LTRIM(RTRIM(product_name)), '') AS product_name,
+
+        TRY_CAST(NULLIF(LTRIM(RTRIM(sales)), '') AS DECIMAL(12,4)) AS sales,
+        NULLIF(LTRIM(RTRIM(sales)), '') AS raw_sales,
+
+        TRY_CAST(NULLIF(LTRIM(RTRIM(quantity)), '') AS INT) AS quantity,
+        NULLIF(LTRIM(RTRIM(quantity)), '') AS raw_quantity,
+
+        TRY_CAST(NULLIF(LTRIM(RTRIM(discount)), '') AS DECIMAL(5,2)) AS discount,
+        NULLIF(LTRIM(RTRIM(discount)), '') AS raw_discount,
+
+        TRY_CAST(NULLIF(LTRIM(RTRIM(profit)), '') AS DECIMAL(12,4)) AS profit,
+        NULLIF(LTRIM(RTRIM(profit)), '') AS raw_profit
+
+    FROM ss_latest
+    WHERE ss_latest.rn = 1
+),
+
+iqr_bounds AS (
+    SELECT DISTINCT
+        PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY sales) OVER ()    AS q1_sales,
+        PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY sales) OVER ()    AS q3_sales,
+        PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY profit) OVER ()   AS q1_profit,
+        PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY profit) OVER ()   AS q3_profit
+    FROM ss_cleaned
+),
+
+flagged AS (
+    SELECT
+        c.row_id, c.order_id, c.order_date, c.ship_date, c.ship_mode,
+        c.customer_id, c.customer_name, c.segment, c.country, c.city, c.state,
+        c.postal_code, c.region, c.product_id, c.category, c.sub_category,
+        c.product_name, c.sales, c.quantity, c.discount, c.profit,
+
+        CASE WHEN
+            c.order_id IS NULL
+        OR c.order_date IS NULL
+        OR c.ship_date IS NULL
+        OR c.customer_id IS NULL
+        OR c.product_id IS NULL
+        OR c.sales IS NULL
+        OR c.quantity IS NULL
+        THEN 1 ELSE 0 END AS has_missing_value,
+
+        CASE WHEN
+            c.raw_order_date IS NOT NULL AND c.order_date IS NULL
+        OR c.raw_ship_date IS NOT NULL AND c.ship_date IS NULL
+        OR c.raw_postal_code IS NOT NULL AND c.postal_code IS NULL
+        OR c.raw_sales IS NOT NULL AND c.sales IS NULL
+        OR c.raw_quantity IS NOT NULL AND c.quantity IS NULL
+        OR c.raw_discount IS NOT NULL AND c.discount IS NULL
+        OR c.raw_profit IS NOT NULL AND c.profit IS NULL
+        OR (c.discount IS NOT NULL AND (c.discount < 0 OR c.discount > 1))
+        OR (c.sales IS NOT NULL AND c.sales <= 0)
+        OR (c.quantity IS NOT NULL AND c.quantity <= 0)
+        OR (c.order_date IS NOT NULL AND c.ship_date IS NOT NULL AND c.ship_date < c.order_date)
+        THEN 1 ELSE 0 END AS has_invalid_value,
+
+        CASE WHEN
+            (c.sales IS NOT NULL AND (c.sales < q1_sales - 1.5*(q3_sales-q1_sales) OR c.sales > q3_sales + 1.5*(q3_sales-q1_sales)))
+        OR (c.profit IS NOT NULL AND (c.profit < q1_profit - 1.5*(q3_profit-q1_profit) OR c.profit > q3_profit + 1.5*(q3_profit-q1_profit)))
+        THEN 1 ELSE 0 END AS has_outlier_value
+
+    FROM ss_cleaned c
+    CROSS JOIN iqr_bounds b
+)
+MERGE silver.superstore AS tgt
+USING flagged AS src
+ON tgt.row_id = src.row_id
+WHEN MATCHED THEN
+    UPDATE SET
+        tgt.order_id = src.order_id,
+        tgt.order_date = src.order_date,
+        tgt.ship_date = src.ship_date,
+        tgt.ship_mode = src.ship_mode,
+        tgt.customer_id = src.customer_id,
+        tgt.customer_name = src.customer_name,
+        tgt.segment = src.segment,
+        tgt.country = src.country,
+        tgt.city = src.city,
+        tgt.state = src.state,
+        tgt.postal_code = src.postal_code,
+        tgt.region = src.region,
+        tgt.product_id = src.product_id,
+        tgt.category = src.category,
+        tgt.sub_category = src.sub_category,
+        tgt.product_name = src.product_name,
+        tgt.sales = src.sales,
+        tgt.quantity = src.quantity,
+        tgt.discount = src.discount,
+        tgt.profit = src.profit,
+        tgt.has_missing_value = src.has_missing_value,
+        tgt.has_invalid_value = src.has_invalid_value,
+        tgt.has_outlier_value = src.has_outlier_value
+WHEN NOT MATCHED THEN
+    INSERT (row_id, order_id, order_date, ship_date, ship_mode, customer_id, customer_name,
+            segment, country, city, state, postal_code, region, product_id, category,
+            sub_category, product_name, sales, quantity, discount, profit,
+            has_missing_value, has_invalid_value, has_outlier_value)
+    VALUES (src.row_id, src.order_id, src.order_date, src.ship_date, src.ship_mode, src.customer_id,
+            src.customer_name, src.segment, src.country, src.city, src.state, src.postal_code,
+            src.region, src.product_id, src.category, src.sub_category, src.product_name,
+            src.sales, src.quantity, src.discount, src.profit,
+            src.has_missing_value, src.has_invalid_value, src.has_outlier_value);
+GO
+
+SELECT *
+FROM silver.superstore;
+
+
+--gold LAYER
+-- ================================================================
+-- 4) GOLD LAYER
+-- Star schema. First layer with real PK/FK constraints. Every
+-- dimension has a -1 "Unknown" member; orphan fact rows point there
+-- instead of being dropped. Rows silver flagged as missing/invalid
+-- are excluded from gold so report numbers stay clean.
+-- ================================================================
+
+-- DIM_DATE
+IF OBJECT_ID('gold.dim_date', 'U') IS NULL
+BEGIN
+    CREATE TABLE gold.dim_date (
+        date_key      INT NOT NULL,
+        full_date     DATE NOT NULL,
+        day           SMALLINT NOT NULL,
+        month         SMALLINT NOT NULL,
+        month_name    NVARCHAR(20) NOT NULL,
+        quarter       SMALLINT NOT NULL,
+        year          SMALLINT NOT NULL,
+        day_of_week   SMALLINT NOT NULL,
+        day_name      NVARCHAR(20) NOT NULL,
+        is_weekend    BIT NOT NULL,
+        CONSTRAINT PK_gold_dim_date PRIMARY KEY (date_key)
+    );
+    INSERT INTO gold.dim_date VALUES (-1, '1900-01-01', 1, 1, 'Unknown', 1, 1900, 1, 'Unknown', 0);
+END;
+GO
+
+MERGE gold.dim_date AS tgt
+USING (
+    SELECT DISTINCT d AS full_date
+    FROM (
+        SELECT order_date AS d FROM silver.superstore WHERE order_date IS NOT NULL
+        UNION
+        SELECT ship_date  AS d FROM silver.superstore WHERE ship_date IS NOT NULL
+    ) all_dates
+) AS src
+    ON tgt.full_date = src.full_date AND tgt.date_key <> -1
+WHEN NOT MATCHED THEN
+    INSERT (date_key, full_date, day, month, month_name, quarter, year, day_of_week, day_name, is_weekend)
+    VALUES (
+        CONVERT(INT, FORMAT(src.full_date, 'yyyyMMdd')), src.full_date,
+        DATEPART(DAY, src.full_date), DATEPART(MONTH, src.full_date), DATENAME(MONTH, src.full_date),
+        DATEPART(QUARTER, src.full_date), DATEPART(YEAR, src.full_date),
+        DATEPART(WEEKDAY, src.full_date), DATENAME(WEEKDAY, src.full_date),
+        CASE WHEN DATENAME(WEEKDAY, src.full_date) IN ('Saturday','Sunday') THEN 1 ELSE 0 END
+    );
+GO
+
+-- DIM_CUSTOMER
+IF OBJECT_ID('gold.dim_customer', 'U') IS NULL
+BEGIN
+    CREATE TABLE gold.dim_customer (
+        customer_key   INT IDENTITY(1,1) NOT NULL,
+        customer_id    NVARCHAR(20) NOT NULL,
+        customer_name  NVARCHAR(100) NOT NULL,
+        segment        NVARCHAR(30) NOT NULL,
+        CONSTRAINT PK_gold_dim_customer PRIMARY KEY (customer_key),
+        CONSTRAINT UQ_gold_dim_customer_bk UNIQUE (customer_id)
+    );
+    SET IDENTITY_INSERT gold.dim_customer ON;
+    INSERT INTO gold.dim_customer (customer_key, customer_id, customer_name, segment)
+    VALUES (-1, 'UNKNOWN', 'Unknown', 'Unknown');
+    SET IDENTITY_INSERT gold.dim_customer OFF;
+END;
+GO
+
+MERGE gold.dim_customer AS tgt
+USING (
+    SELECT DISTINCT customer_id, customer_name, segment
+    FROM silver.superstore WHERE customer_id IS NOT NULL
+) AS src
+    ON tgt.customer_id = src.customer_id
+WHEN MATCHED THEN
+    UPDATE SET tgt.customer_name = src.customer_name, tgt.segment = src.segment
+WHEN NOT MATCHED THEN
+    INSERT (customer_id, customer_name, segment) VALUES (src.customer_id, src.customer_name, src.segment);
+GO
+
+-- DIM_PRODUCT
+IF OBJECT_ID('gold.dim_product', 'U') IS NULL
+BEGIN
+    CREATE TABLE gold.dim_product (
+        product_key    INT IDENTITY(1,1) NOT NULL,
+        product_id     NVARCHAR(30) NOT NULL,
+        product_name   NVARCHAR(200) NOT NULL,
+        category       NVARCHAR(50) NOT NULL,
+        sub_category   NVARCHAR(50) NOT NULL,
+        CONSTRAINT PK_gold_dim_product PRIMARY KEY (product_key),
+        CONSTRAINT UQ_gold_dim_product_bk UNIQUE (product_id, product_name)
+    );
+    SET IDENTITY_INSERT gold.dim_product ON;
+    INSERT INTO gold.dim_product (product_key, product_id, product_name, category, sub_category)
+    VALUES (-1, 'UNKNOWN', 'Unknown', 'Unknown', 'Unknown');
+    SET IDENTITY_INSERT gold.dim_product OFF;
+END;
+GO
+
+MERGE gold.dim_product AS tgt
+USING (
+    SELECT DISTINCT product_id, product_name, category, sub_category
+    FROM silver.superstore WHERE product_id IS NOT NULL AND product_name IS NOT NULL
+) AS src
+    ON tgt.product_id = src.product_id AND tgt.product_name = src.product_name
+WHEN MATCHED THEN
+    UPDATE SET tgt.category = src.category, tgt.sub_category = src.sub_category
+WHEN NOT MATCHED THEN
+    INSERT (product_id, product_name, category, sub_category)
+    VALUES (src.product_id, src.product_name, src.category, src.sub_category);
+GO
+
+-- DIM_LOCATION
+IF OBJECT_ID('gold.dim_location', 'U') IS NULL
+BEGIN
+    CREATE TABLE gold.dim_location (
+        location_key   INT IDENTITY(1,1) NOT NULL,
+        city           NVARCHAR(100) NOT NULL,
+        state          NVARCHAR(100) NOT NULL,
+        postal_code    INT NOT NULL,
+        region         NVARCHAR(30) NOT NULL,
+        country        NVARCHAR(50) NOT NULL,
+        CONSTRAINT PK_gold_dim_location PRIMARY KEY (location_key),
+        CONSTRAINT UQ_gold_dim_location_bk UNIQUE (city, state, postal_code, region, country)
+    );
+    SET IDENTITY_INSERT gold.dim_location ON;
+    INSERT INTO gold.dim_location (location_key, city, state, postal_code, region, country)
+    VALUES (-1, 'Unknown', 'Unknown', -1, 'Unknown', 'Unknown');
+    SET IDENTITY_INSERT gold.dim_location OFF;
+END;
+GO
+
+MERGE gold.dim_location AS tgt
+USING (
+    SELECT DISTINCT city, state, postal_code, region, country
+    FROM silver.superstore
+    WHERE city IS NOT NULL AND state IS NOT NULL AND postal_code IS NOT NULL
+) AS src
+    ON tgt.city = src.city AND tgt.state = src.state AND tgt.postal_code = src.postal_code
+       AND tgt.region = src.region AND tgt.country = src.country
+WHEN NOT MATCHED THEN
+    INSERT (city, state, postal_code, region, country)
+    VALUES (src.city, src.state, src.postal_code, src.region, src.country);
+GO
+
+-- DIM_SHIP_MODE
+IF OBJECT_ID('gold.dim_ship_mode', 'U') IS NULL
+BEGIN
+    CREATE TABLE gold.dim_ship_mode (
+        ship_mode_key  INT IDENTITY(1,1) NOT NULL,
+        ship_mode      NVARCHAR(30) NOT NULL,
+        CONSTRAINT PK_gold_dim_ship_mode PRIMARY KEY (ship_mode_key),
+        CONSTRAINT UQ_gold_dim_ship_mode_bk UNIQUE (ship_mode)
+    );
+    SET IDENTITY_INSERT gold.dim_ship_mode ON;
+    INSERT INTO gold.dim_ship_mode (ship_mode_key, ship_mode) VALUES (-1, 'Unknown');
+    SET IDENTITY_INSERT gold.dim_ship_mode OFF;
+END;
+GO
+
+MERGE gold.dim_ship_mode AS tgt
+USING (SELECT DISTINCT ship_mode FROM silver.superstore WHERE ship_mode IS NOT NULL) AS src
+    ON tgt.ship_mode = src.ship_mode
+WHEN NOT MATCHED THEN
+    INSERT (ship_mode) VALUES (src.ship_mode);
+GO
+
+-- FACT_SALES
+IF OBJECT_ID('gold.fact_sales', 'U') IS NULL
+BEGIN
+    CREATE TABLE gold.fact_sales (
+        sales_key       NVARCHAR(20) NOT NULL,
+        order_id        NVARCHAR(20) NOT NULL,
+        order_date_key  INT NOT NULL,
+        ship_date_key   INT NOT NULL,
+        customer_key    INT NOT NULL,
+        product_key     INT NOT NULL,
+        location_key    INT NOT NULL,
+        ship_mode_key   INT NOT NULL,
+        sales_amount    DECIMAL(12,4) NOT NULL,
+        quantity        INT NOT NULL,
+        discount        DECIMAL(5,2) NOT NULL,
+        profit          DECIMAL(12,4) NOT NULL,
+        CONSTRAINT PK_gold_fact_sales PRIMARY KEY (sales_key),
+        CONSTRAINT FK_fact_sales_order_date FOREIGN KEY (order_date_key) REFERENCES gold.dim_date(date_key),
+        CONSTRAINT FK_fact_sales_ship_date  FOREIGN KEY (ship_date_key)  REFERENCES gold.dim_date(date_key),
+        CONSTRAINT FK_fact_sales_customer   FOREIGN KEY (customer_key)   REFERENCES gold.dim_customer(customer_key),
+        CONSTRAINT FK_fact_sales_product    FOREIGN KEY (product_key)    REFERENCES gold.dim_product(product_key),
+        CONSTRAINT FK_fact_sales_location   FOREIGN KEY (location_key)   REFERENCES gold.dim_location(location_key),
+        CONSTRAINT FK_fact_sales_ship_mode  FOREIGN KEY (ship_mode_key)  REFERENCES gold.dim_ship_mode(ship_mode_key)
+    );
+END;
+GO
+
+MERGE gold.fact_sales AS tgt
+USING (
+    SELECT
+        s.row_id                                                    AS sales_key,
+        s.order_id                                                  AS order_id,
+        ISNULL(CONVERT(INT, FORMAT(s.order_date, 'yyyyMMdd')), -1)  AS order_date_key,
+        ISNULL(CONVERT(INT, FORMAT(s.ship_date, 'yyyyMMdd')), -1)   AS ship_date_key,
+        ISNULL(c.customer_key, -1)                                  AS customer_key,
+        ISNULL(p.product_key, -1)                                   AS product_key,
+        ISNULL(l.location_key, -1)                                  AS location_key,
+        ISNULL(sm.ship_mode_key, -1)                                AS ship_mode_key,
+        s.sales                                                     AS sales_amount,
+        s.quantity                                                  AS quantity,
+        s.discount                                                  AS discount,
+        s.profit                                                    AS profit
+    FROM silver.superstore s
+    LEFT JOIN gold.dim_customer c   ON s.customer_id = c.customer_id
+    LEFT JOIN gold.dim_product p    ON s.product_id = p.product_id AND s.product_name = p.product_name
+    LEFT JOIN gold.dim_location l   ON s.city = l.city AND s.state = l.state AND s.postal_code = l.postal_code
+    LEFT JOIN gold.dim_ship_mode sm ON s.ship_mode = sm.ship_mode
+    WHERE s.has_missing_value = 0 AND s.has_invalid_value = 0
+) AS src
+    ON tgt.sales_key = src.sales_key
+WHEN MATCHED THEN
+    UPDATE SET
+        tgt.order_id = src.order_id, tgt.order_date_key = src.order_date_key,
+        tgt.ship_date_key = src.ship_date_key, tgt.customer_key = src.customer_key,
+        tgt.product_key = src.product_key, tgt.location_key = src.location_key,
+        tgt.ship_mode_key = src.ship_mode_key, tgt.sales_amount = src.sales_amount,
+        tgt.quantity = src.quantity, tgt.discount = src.discount, tgt.profit = src.profit
+WHEN NOT MATCHED THEN
+    INSERT (sales_key, order_id, order_date_key, ship_date_key, customer_key, product_key,
+            location_key, ship_mode_key, sales_amount, quantity, discount, profit)
+    VALUES (src.sales_key, src.order_id, src.order_date_key, src.ship_date_key, src.customer_key,
+            src.product_key, src.location_key, src.ship_mode_key, src.sales_amount, src.quantity,
+            src.discount, src.profit);
+GO
+
+
+
+
+
+
+
+
+================================================
+FILE: scripts/placehorder
+================================================
+
+
+
+
+================================================
+FILE: tests/placeholder
+================================================
+
+
+
 
